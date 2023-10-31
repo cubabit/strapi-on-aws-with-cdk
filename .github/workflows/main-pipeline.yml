@@ -31,6 +31,6 @@ jobs:
         cd infrastructure \
          && npm install \
          && npx cdk deploy --require-approval never \
-          --context applicationName=strapi \
-          --context hostedZoneDomainName=inflow-it-labs.tk \
+          --context applicationName=${{ secrets.APPLICATION_NAME }} \
+          --context hostedZoneDomainName=${{ secrets.HOSTED_ZONE_DOMAIN_NAME }} \
           --context authorizedIPsForAdminAccess=${{ secrets.AUTHORIZED_IP_ADDRESSES_FOR_ADMIN_ACCESS }}
