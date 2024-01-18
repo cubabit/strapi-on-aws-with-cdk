@@ -1,6 +1,6 @@
 import { NestedStack, NestedStackProps } from "aws-cdk-lib";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { IVpc, Subnet } from "aws-cdk-lib/aws-ec2";
+import { IVpc, Subnet, SubnetType } from "aws-cdk-lib/aws-ec2";
 import {
   Cluster,
   ContainerImage,
@@ -59,6 +59,7 @@ export class ECSService extends NestedStack {
       vpc,
       internetFacing: true,
       vpcSubnets: {
+        subnetType: SubnetType.PUBLIC,
         onePerAz: true,
       },
   })
