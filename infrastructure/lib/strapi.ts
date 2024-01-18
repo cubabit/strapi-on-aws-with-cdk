@@ -1,49 +1,54 @@
-import { Stack, StackProps } from "aws-cdk-lib";
+import { SecretValue, Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import { Certificate } from "./certificate";
-import Database from "./database";
+import { Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { ECSService } from "./ecs-service";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
+
 import { Route53Record } from "./route53-record";
-import { StrapiVpc } from "./vpc";
+import { Certificate } from "aws-cdk-lib/aws-certificatemanager";
 
 class StrapiStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const vpc = new StrapiVpc(this, StrapiVpc.name, {});
-
+    const vpcId = this.node.tryGetContext("vpcId");
     const applicationName = this.node.tryGetContext("applicationName");
+    const dbPassword = this.node.tryGetContext("dbPassword");
+    const dbHostname = this.node.tryGetContext("dbHostname");
     const hostedZoneDomainName = this.node.tryGetContext(
       "hostedZoneDomainName"
     );
     const authorizedIPsForAdminAccess: string[] = this.node
       .tryGetContext("authorizedIPsForAdminAccess")
       .split(",");
+    const certificateArn = this.node.tryGetContext("certificateArn");
 
-    const domainName = `${applicationName}.${hostedZoneDomainName}`;
-
-    const database = new Database(this, Database.name, {
-      applicationName,
-      vpc: vpc.vpc,
+    const dbSecret = new Secret(this, "DBCredentialsSecret", {
+      secretObjectValue: {
+        username: SecretValue.unsafePlainText(applicationName),
+        database: SecretValue.unsafePlainText(applicationName),
+        password: SecretValue.unsafePlainText(dbPassword),
+      },
     });
 
-    const certificate = new Certificate(this, Certificate.name, {
-      hostedZoneDomainName,
-      domainName,
+    const vpc = Vpc.fromLookup(this, 'ImportVPC', {
+      vpcId,
     });
+
+    const certificate = Certificate.fromCertificateArn(this,'Certificate', certificateArn);
 
     const ecsServiceStack = new ECSService(this, ECSService.name, {
-      certificate: certificate.certificate,
-      dbHostname: database.dbCluster.clusterEndpoint.hostname.toString(),
-      dbPort: database.dbCluster.clusterEndpoint.port.toString(),
+      certificate,
+      dbHostname,
+      dbPort: "5432",
       dbName: applicationName,
-      dbSecret: database.dbSecret,
-      vpc: vpc.vpc,
+      dbSecret,
+      vpc,
       applicationName,
       authorizedIPsForAdminAccess,
     });
 
-    const records = new Route53Record(this, Route53Record.name, {
+    new Route53Record(this, Route53Record.name, {
       hostedZoneDomainName,
       applicationName,
       loadBalancer: ecsServiceStack.loadBalancer,

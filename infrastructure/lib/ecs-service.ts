@@ -1,6 +1,6 @@
 import { NestedStack, NestedStackProps } from "aws-cdk-lib";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { IVpc } from "aws-cdk-lib/aws-ec2";
+import { IVpc, Subnet } from "aws-cdk-lib/aws-ec2";
 import {
   Cluster,
   ContainerImage,
@@ -8,6 +8,7 @@ import {
 } from "aws-cdk-lib/aws-ecs";
 import { ApplicationLoadBalancedFargateService } from "aws-cdk-lib/aws-ecs-patterns";
 import {
+  ApplicationLoadBalancer,
   IApplicationLoadBalancer,
   ListenerAction,
   ListenerCondition,
@@ -54,6 +55,14 @@ export class ECSService extends NestedStack {
       },
     });
 
+    const loadBalancer = new ApplicationLoadBalancer(this, "ALB", {
+      vpc,
+      internetFacing: true,
+      vpcSubnets: {
+        onePerAz: true,
+      },
+  })
+
     const cluster = new Cluster(this, "Cluster", { vpc });
     const loadBalancedService = new ApplicationLoadBalancedFargateService(
       this,
@@ -76,6 +85,7 @@ export class ECSService extends NestedStack {
           },
         },
         certificate,
+        loadBalancer,
       }
     );
 
@@ -88,7 +98,7 @@ export class ECSService extends NestedStack {
       policyStatement
     );
 
-    this.restricAccessToAdmin(loadBalancedService, authorizedIPsForAdminAccess);
+    // this.restricAccessToAdmin(loadBalancedService, authorizedIPsForAdminAccess);
 
     this.loadBalancer = loadBalancedService.loadBalancer;
   }

@@ -1,0 +1,27 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pa_news_articles",
+  "info": {
+    "singularName": "pa-news-article",
+    "pluralName": "pa-news-articles",
+    "displayName": "PA News Article"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "Title": {
+      "type": "string",
+      "required": true
+    },
+    "Body": {
+      "type": "richtext",
+      "required": true
+    },
+    "Date": {
+      "type": "date",
+      "required": true
+    }
+  }
+}

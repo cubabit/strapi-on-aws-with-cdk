@@ -10,10 +10,12 @@
     "strapi": "strapi"
   },
   "dependencies": {
+    "@strapi/plugin-graphql": "4.5.2",
     "@strapi/plugin-i18n": "4.5.2",
     "@strapi/plugin-users-permissions": "4.5.2",
     "@strapi/strapi": "4.5.2",
     "aws-sdk": "^2.1264.0",
+    "better-sqlite3": "^9.0.0",
     "pg": "8.6.0"
   },
   "author": {
