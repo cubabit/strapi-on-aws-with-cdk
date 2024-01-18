@@ -34,7 +34,7 @@ jobs:
           --context applicationName="${{ vars.APPLICATION_NAME }}" \
           --context hostedZoneDomainName="${{ vars.HOSTED_ZONE_DOMAIN_NAME }}" \
           --context authorizedIPsForAdminAccess="${{ vars.AUTHORIZED_IP_ADDRESSES_FOR_ADMIN_ACCESS }}" \
-          --context vpcId="vpc-${{ vars.VPC_ID }}" \
+          --context vpcId="${{ vars.VPC_ID }}" \
           --context dbHostname="${{ vars.DB_HOSTNAME }}" \
           --context dbPassword="${{ secrets.DB_PASSWORD }}" \
           --context certificateArn="${{ vars.CERTIFICATE_ARN }}"
