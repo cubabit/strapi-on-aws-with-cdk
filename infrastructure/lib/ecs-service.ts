@@ -1,6 +1,6 @@
 import { NestedStack, NestedStackProps } from "aws-cdk-lib";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
-import { IVpc, Subnet, SubnetType } from "aws-cdk-lib/aws-ec2";
+import { IVpc, SecurityGroup, Subnet, SubnetType } from "aws-cdk-lib/aws-ec2";
 import {
   Cluster,
   ContainerImage,
@@ -62,7 +62,11 @@ export class ECSService extends NestedStack {
         subnetType: SubnetType.PUBLIC,
         onePerAz: true,
       },
-  })
+    });
+
+    const securityGroup = new SecurityGroup(this, "SecurityGroup", {
+      vpc,
+    });
 
     const cluster = new Cluster(this, "Cluster", { vpc });
     const loadBalancedService = new ApplicationLoadBalancedFargateService(
@@ -87,6 +91,7 @@ export class ECSService extends NestedStack {
         },
         certificate,
         loadBalancer,
+        securityGroups: [securityGroup],
       }
     );
 
