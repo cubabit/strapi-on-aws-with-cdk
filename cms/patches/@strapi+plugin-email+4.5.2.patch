@@ -7,7 +7,7 @@ index 4ddb6ce..1faf252 100644
          throw new ApplicationError(e.message);
        } else {
 -        throw new Error(`Couldn't send test email: ${e.message}.`);
-+        throw new Error(`Couldn't send test email (PATCHED): ${e}.`);
++        throw new Error(`Couldn't send test email (PATCHED): ${e}. ${process.env.AWS_SES_KEY}  ${process.env.AWS_SES_SECRET}`);
        }
      }
 
