@@ -84,11 +84,11 @@ export class ECSService extends NestedStack {
     });
 
     const user = new User(this, 'IamUser', {
-      userName: 'iam-user',
+      userName: `${applicationName}-User`,
     });
 
     const policy = new Policy(this, 'IamUserPolicy', {
-      policyName: 'IamUserPolicy',
+      policyName: `${applicationName}-IamUserPolicy`,
       statements: [
         new PolicyStatement({
           effect: Effect.ALLOW,
