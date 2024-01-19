@@ -3,13 +3,33 @@ export default ({ env }) => ({
     config: {
       provider: 'amazon-ses',
       providerOptions: {
-        key: env('AWS_SES_KEY'),
-        secret: env('AWS_SES_SECRET'),
+        key: env('AWS_ACCESS_KEY_ID'),
+        secret: env('AWS_ACCESS_SECRET_KEY'),
         amazon: 'https://email.eu-west-1.amazonaws.com',
       },
       settings: {
         defaultFrom: 'cms@ruuby.com',
         defaultReplyTo: 'noreply@ruuby.com',
+      },
+    },
+  },
+  upload: {
+    config: {
+      provider: 'aws-s3',
+      providerOptions: {
+        accessKeyId: env('AWS_ACCESS_KEY_ID'),
+        secretAccessKey: env('AWS_ACCESS_SECRET_KEY'),
+        region: "eu-west-1",
+        params: {
+          ACL: env('AWS_ACL', 'public-read'),
+          signedUrlExpires: env('AWS_SIGNED_URL_EXPIRES', 15 * 60),
+          Bucket: env('AWS_BUCKET'),
+        },
+      },
+      actionOptions: {
+        upload: {},
+        uploadStream: {},
+        delete: {},
       },
     },
   },

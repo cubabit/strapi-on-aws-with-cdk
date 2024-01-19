@@ -13,10 +13,11 @@ import {
   ListenerAction,
   ListenerCondition,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
-import { CfnAccessKey, Effect, Policy, PolicyStatement, User } from "aws-cdk-lib/aws-iam";
+import { CfnAccessKey, Effect, ManagedPolicy, Policy, PolicyStatement, User } from "aws-cdk-lib/aws-iam";
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { SesSmtpCredentials } from "@pepperize/cdk-ses-smtp-credentials";
+import { BlockPublicAccess, Bucket, BucketEncryption } from "aws-cdk-lib/aws-s3";
 
 export interface ECSServiceProps extends NestedStackProps {
   vpc: IVpc;
@@ -46,6 +47,12 @@ export class ECSService extends NestedStack {
       authorizedIPsForAdminAccess,
     } = props!;
 
+    const bucket = new Bucket(scope, 'Bucket', {
+      encryption: BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      versioned: true,
+    });
+
     const strapiSecret = new Secret(this, "StrapiSecret", {
       secretName: `${applicationName}-strapi-secret`,
 
@@ -69,11 +76,11 @@ export class ECSService extends NestedStack {
       vpc,
     });
 
-    const user = new User(this, 'SesUser', {
+    const user = new User(this, 'IamUser', {
       userName: 'iam-user',
     });
 
-    const policy = new Policy(this, 'SesUserPolicy', {
+    const policy = new Policy(this, 'IamUserPolicy', {
       policyName: 'IamUserPolicy',
       statements: [
         new PolicyStatement({
@@ -81,16 +88,23 @@ export class ECSService extends NestedStack {
           actions: ["ses:SendRawEmail", "ses:SendEmail"],
           resources: ["*"],
         }),
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["s3:*"],
+          resources: [
+            bucket.arnForObjects("*"), 
+            bucket.bucketArn,
+          ],
+        }),
       ],
     });
-
     policy.attachToUser(user);
 
-    const accessKey = new CfnAccessKey(this, 'SesUserAccessKey', {
+    const accessKey = new CfnAccessKey(this, 'IamUserAccessKey', {
       userName: user.userName,
     });
 
-    const sesSecret = new Secret(this, "SesUserSecret", {
+    const iamSecret = new Secret(this, "IamUserSecret", {
       secretObjectValue: {
         key: SecretValue.unsafePlainText(accessKey.ref),
         secret: SecretValue.unsafePlainText(accessKey.attrSecretAccessKey),
@@ -105,7 +119,7 @@ export class ECSService extends NestedStack {
         cluster,
         taskImageOptions: {
           secrets: {
-            ...this.getSecretsDefinition(dbSecret, strapiSecret, sesSecret),
+            ...this.getSecretsDefinition(dbSecret, strapiSecret, iamSecret),
           },
           image: ContainerImage.fromAsset("../cms"),
           containerPort: 1337,
@@ -138,7 +152,7 @@ export class ECSService extends NestedStack {
     this.loadBalancer = loadBalancedService.loadBalancer;
   }
 
-  private getSecretsDefinition(dbSecret: ISecret, strapiSecret: ISecret, sesSecret: ISecret) {
+  private getSecretsDefinition(dbSecret: ISecret, strapiSecret: ISecret, iamSecret: ISecret) {
     return {
       DATABASE_USERNAME: ecs_Secret.fromSecretsManager(dbSecret, "username"),
       DATABASE_PASSWORD: ecs_Secret.fromSecretsManager(dbSecret, "password"),
@@ -149,8 +163,8 @@ export class ECSService extends NestedStack {
         strapiSecret,
         "StrapiKey"
       ),
-      AWS_SES_KEY: ecs_Secret.fromSecretsManager(sesSecret, "key"),
-      AWS_SES_SECRET: ecs_Secret.fromSecretsManager(sesSecret, "secret"),
+      AWS_ACCESS_KEY_ID: ecs_Secret.fromSecretsManager(iamSecret, "key"),
+      AWS_ACCESS_SECRET_KEY: ecs_Secret.fromSecretsManager(iamSecret, "secret"),
     };
   }
 
