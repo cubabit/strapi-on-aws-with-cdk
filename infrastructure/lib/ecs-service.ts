@@ -17,7 +17,7 @@ import { CfnAccessKey, Effect, ManagedPolicy, Policy, PolicyStatement, User } fr
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { SesSmtpCredentials } from "@pepperize/cdk-ses-smtp-credentials";
-import { BlockPublicAccess, Bucket, BucketEncryption } from "aws-cdk-lib/aws-s3";
+import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods } from "aws-cdk-lib/aws-s3";
 
 export interface ECSServiceProps extends NestedStackProps {
   vpc: IVpc;
@@ -51,6 +51,13 @@ export class ECSService extends NestedStack {
       encryption: BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       versioned: true,
+      cors: [{
+        allowedOrigins: ['*'],
+        allowedMethods: [HttpMethods.GET],
+        allowedHeaders: ['*'],
+        exposedHeaders: [],
+        maxAge: 3000
+      }],
     });
 
     const strapiSecret = new Secret(this, "StrapiSecret", {
@@ -130,6 +137,7 @@ export class ECSService extends NestedStack {
             DATABASE_NAME: dbName,
             HOST: "0.0.0.0",
             PORT: "1337",
+            AWS_BUCKET: bucket.bucketName,
           },
         },
         certificate,
