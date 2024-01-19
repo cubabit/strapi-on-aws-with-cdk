@@ -1,4 +1,4 @@
-import { NestedStack, NestedStackProps } from "aws-cdk-lib";
+import { NestedStack, NestedStackProps, SecretValue } from "aws-cdk-lib";
 import { ICertificate } from "aws-cdk-lib/aws-certificatemanager";
 import { IVpc, SecurityGroup, Subnet, SubnetType } from "aws-cdk-lib/aws-ec2";
 import {
@@ -13,7 +13,7 @@ import {
   ListenerAction,
   ListenerCondition,
 } from "aws-cdk-lib/aws-elasticloadbalancingv2";
-import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { CfnAccessKey, Effect, Policy, PolicyStatement, User } from "aws-cdk-lib/aws-iam";
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { SesSmtpCredentials } from "@pepperize/cdk-ses-smtp-credentials";
@@ -69,8 +69,32 @@ export class ECSService extends NestedStack {
       vpc,
     });
 
-    const { secret: sesSecret } = new SesSmtpCredentials(this, "SmtpCredentials", {
-      userName: `${applicationName}-ses-user`,
+    const user = new User(this, 'SesUser', {
+      userName: 'iam-user',
+    });
+
+    const policy = new Policy(this, 'SesUserPolicy', {
+      policyName: 'IamUserPolicy',
+      statements: [
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ["ses:SendRawEmail", "ses:SendEmail"],
+          resources: ["*"],
+        }),
+      ],
+    });
+
+    policy.attachToUser(user);
+
+    const accessKey = new CfnAccessKey(this, 'SesUserAccessKey', {
+      userName: user.userName,
+    });
+
+    const sesSecret = new Secret(this, "SesUserSecret", {
+      secretObjectValue: {
+        key: SecretValue.unsafePlainText(accessKey.ref),
+        secret: SecretValue.unsafePlainText(accessKey.attrSecretAccessKey),
+      },
     });
 
     const cluster = new Cluster(this, "Cluster", { vpc });
@@ -125,8 +149,8 @@ export class ECSService extends NestedStack {
         strapiSecret,
         "StrapiKey"
       ),
-      AWS_SES_KEY: ecs_Secret.fromSecretsManager(sesSecret, "username"),
-      AWS_SES_SECRET: ecs_Secret.fromSecretsManager(sesSecret, "password"),
+      AWS_SES_KEY: ecs_Secret.fromSecretsManager(sesSecret, "key"),
+      AWS_SES_SECRET: ecs_Secret.fromSecretsManager(sesSecret, "secret"),
     };
   }
 
