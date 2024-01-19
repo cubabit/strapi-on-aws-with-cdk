@@ -16,6 +16,7 @@ import {
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
+import { SesSmtpCredentials } from "@pepperize/cdk-ses-smtp-credentials";
 
 export interface ECSServiceProps extends NestedStackProps {
   vpc: IVpc;
@@ -68,6 +69,10 @@ export class ECSService extends NestedStack {
       vpc,
     });
 
+    const { secret: sesSecret } = new SesSmtpCredentials(this, "SmtpCredentials", {
+      userName: `${applicationName}-ses-user`,
+    });
+
     const cluster = new Cluster(this, "Cluster", { vpc });
     const loadBalancedService = new ApplicationLoadBalancedFargateService(
       this,
@@ -76,7 +81,7 @@ export class ECSService extends NestedStack {
         cluster,
         taskImageOptions: {
           secrets: {
-            ...this.getSecretsDefinition(dbSecret, strapiSecret),
+            ...this.getSecretsDefinition(dbSecret, strapiSecret, sesSecret),
           },
           image: ContainerImage.fromAsset("../cms"),
           containerPort: 1337,
@@ -109,7 +114,7 @@ export class ECSService extends NestedStack {
     this.loadBalancer = loadBalancedService.loadBalancer;
   }
 
-  private getSecretsDefinition(dbSecret: ISecret, strapiSecret: ISecret) {
+  private getSecretsDefinition(dbSecret: ISecret, strapiSecret: ISecret, sesSecret: ISecret) {
     return {
       DATABASE_USERNAME: ecs_Secret.fromSecretsManager(dbSecret, "username"),
       DATABASE_PASSWORD: ecs_Secret.fromSecretsManager(dbSecret, "password"),
@@ -120,6 +125,8 @@ export class ECSService extends NestedStack {
         strapiSecret,
         "StrapiKey"
       ),
+      AWS_SES_KEY: ecs_Secret.fromSecretsManager(sesSecret, "username"),
+      AWS_SES_SECRET: ecs_Secret.fromSecretsManager(sesSecret, "password"),
     };
   }
 

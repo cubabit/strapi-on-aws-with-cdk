@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@strapi/plugin-i18n": "4.5.2",
-    "@strapi/plugin-users-permissions": "4.5.2",
+    "@strapi/provider-email-amazon-ses": "4.17.1",
     "@strapi/strapi": "4.5.2",
     "aws-sdk": "^2.1264.0",
     "better-sqlite3": "^9.0.0",
