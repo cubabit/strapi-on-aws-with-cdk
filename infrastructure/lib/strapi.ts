@@ -13,6 +13,7 @@ class StrapiStack extends Stack {
 
     const vpcId = this.node.tryGetContext("vpcId");
     const applicationName = this.node.tryGetContext("applicationName");
+    const dbUsername = this.node.tryGetContext("dbUsername");
     const dbPassword = this.node.tryGetContext("dbPassword");
     const dbHostname = this.node.tryGetContext("dbHostname");
     const hostedZoneDomainName = this.node.tryGetContext(
@@ -25,7 +26,7 @@ class StrapiStack extends Stack {
 
     const dbSecret = new Secret(this, "DBCredentialsSecret", {
       secretObjectValue: {
-        username: SecretValue.unsafePlainText(applicationName),
+        username: SecretValue.unsafePlainText(dbUsername),
         database: SecretValue.unsafePlainText(applicationName),
         password: SecretValue.unsafePlainText(dbPassword),
       },
