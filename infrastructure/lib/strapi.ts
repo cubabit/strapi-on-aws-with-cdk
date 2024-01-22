@@ -17,6 +17,7 @@ class StrapiStack extends Stack {
     const dbPort = this.node.tryGetContext("dbPort");
     const dbPassword = this.node.tryGetContext("dbPassword");
     const dbHostname = this.node.tryGetContext("dbHostname");
+    const dbSecurityGroupId = this.node.tryGetContext("dbSecurityGroupId");
     const hostedZoneDomainName = this.node.tryGetContext(
       "hostedZoneDomainName"
     );
@@ -45,6 +46,7 @@ class StrapiStack extends Stack {
       dbPort,
       dbName: applicationName,
       dbSecret,
+      dbSecurityGroupId,
       vpc,
       applicationName,
       authorizedIPsForAdminAccess,

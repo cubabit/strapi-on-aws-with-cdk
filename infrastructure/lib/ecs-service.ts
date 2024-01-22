@@ -27,6 +27,7 @@ export interface ECSServiceProps extends NestedStackProps {
   dbHostname: string;
   dbPort: string;
   applicationName: string;
+  dbSecurityGroupId: string;
   authorizedIPsForAdminAccess: string[];
 }
 
@@ -44,6 +45,7 @@ export class ECSService extends NestedStack {
       dbPort,
       certificate,
       applicationName,
+      dbSecurityGroupId,
       authorizedIPsForAdminAccess,
     } = props!;
 
@@ -86,10 +88,6 @@ export class ECSService extends NestedStack {
       },
     });
 
-    const securityGroup = new SecurityGroup(this, "SecurityGroup", {
-      vpc,
-    });
-
     const user = new User(this, 'IamUser', {
       userName: `${applicationName}-User`,
     });
@@ -125,6 +123,8 @@ export class ECSService extends NestedStack {
       },
     });
 
+    const dbSecurityGroup = SecurityGroup.fromLookupById(this, "SecurityGroup", dbSecurityGroupId);
+
     const cluster = new Cluster(this, "Cluster", { vpc });
     const loadBalancedService = new ApplicationLoadBalancedFargateService(
       this,
@@ -149,7 +149,7 @@ export class ECSService extends NestedStack {
         },
         certificate,
         loadBalancer,
-        securityGroups: [securityGroup],
+        securityGroups: [dbSecurityGroup],
       }
     );
 
