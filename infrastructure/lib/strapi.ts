@@ -14,6 +14,7 @@ class StrapiStack extends Stack {
     const vpcId = this.node.tryGetContext("vpcId");
     const applicationName = this.node.tryGetContext("applicationName");
     const dbUsername = this.node.tryGetContext("dbUsername");
+    const dbPort = this.node.tryGetContext("dbPort");
     const dbPassword = this.node.tryGetContext("dbPassword");
     const dbHostname = this.node.tryGetContext("dbHostname");
     const hostedZoneDomainName = this.node.tryGetContext(
@@ -41,7 +42,7 @@ class StrapiStack extends Stack {
     const ecsServiceStack = new ECSService(this, ECSService.name, {
       certificate,
       dbHostname,
-      dbPort: "5432",
+      dbPort,
       dbName: applicationName,
       dbSecret,
       vpc,

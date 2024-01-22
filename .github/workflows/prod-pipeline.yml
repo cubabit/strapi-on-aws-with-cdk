@@ -27,6 +27,7 @@ jobs:
           --context authorizedIPsForAdminAccess="${{ vars.AUTHORIZED_IP_ADDRESSES_FOR_ADMIN_ACCESS }}" \
           --context vpcId="${{ vars.VPC_ID }}" \
           --context dbHostname="${{ vars.DB_HOSTNAME }}" \
+          --context dbPort="${{ vars.DB_PORT }}" \
           --context dbUsername="${{ vars.DB_USERNAME }}" \
           --context dbPassword="${{ secrets.DB_PASSWORD }}" \
           --context certificateArn="${{ vars.CERTIFICATE_ARN }}"
