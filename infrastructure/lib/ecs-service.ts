@@ -17,7 +17,7 @@ import { CfnAccessKey, Effect, ManagedPolicy, Policy, PolicyStatement, User } fr
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { SesSmtpCredentials } from "@pepperize/cdk-ses-smtp-credentials";
-import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods } from "aws-cdk-lib/aws-s3";
+import { BlockPublicAccess, Bucket, BucketEncryption, HttpMethods, ObjectOwnership } from "aws-cdk-lib/aws-s3";
 
 export interface ECSServiceProps extends NestedStackProps {
   vpc: IVpc;
@@ -51,6 +51,13 @@ export class ECSService extends NestedStack {
       encryption: BucketEncryption.S3_MANAGED,
       enforceSSL: true,
       versioned: true,
+      blockPublicAccess: new BlockPublicAccess({
+        blockPublicAcls: false,
+        blockPublicPolicy: true,
+        ignorePublicAcls: false,
+        restrictPublicBuckets: true,
+      }),
+      objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
       cors: [{
         allowedOrigins: ['*'],
         allowedMethods: [HttpMethods.GET],
