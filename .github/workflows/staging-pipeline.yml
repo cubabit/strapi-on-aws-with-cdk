@@ -1,0 +1,32 @@
+name: strapi staging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy-strapi:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v3 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Build & Deploy Strapi
+      run: |
+        cd infrastructure \
+         && npm install \
+         && npx cdk deploy --require-approval never \
+          --context applicationName="${{ vars.APPLICATION_NAME }}" \
+          --context hostedZoneDomainName="${{ vars.HOSTED_ZONE_DOMAIN_NAME }}" \
+          --context authorizedIPsForAdminAccess="${{ vars.AUTHORIZED_IP_ADDRESSES_FOR_ADMIN_ACCESS }}" \
+          --context vpcId="${{ vars.VPC_ID }}" \
+          --context dbHostname="${{ vars.DB_HOSTNAME }}" \
+          --context dbUsername="${{ vars.DB_USERNAME }}" \
+          --context dbPassword="${{ secrets.DB_PASSWORD }}" \
+          --context certificateArn="${{ vars.CERTIFICATE_ARN }}"

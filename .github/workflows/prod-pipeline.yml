@@ -1,21 +1,12 @@
-name: strapi on aws pipeline
+name: strapi prod
 
 on:
-  push:
-    branches: [ main ]
-
-      
-  pull_request:
-    branches: [ main ]
-
-env:
-  APPLICATION_NAME: awesome-strapi
+  workflow_dispatch:
 
 jobs:
-
   build-and-deploy-strapi:
-    
     runs-on: ubuntu-latest
+    environment: prod
     
     steps:
     - uses: actions/checkout@v3 
